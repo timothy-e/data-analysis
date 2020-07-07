@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     weight_change = [smoothed_weights[i] - smoothed_weights[i - 1] for i in range(1, len(smoothed_weights))]
 
-    smoothed_weight_change = [0] + smooth(weight_change, 2)
+    smoothed_weight_change = smooth(weight_change, 2)
 
     # gain, loss = split_on_threshold(smoothed_weight_change, 0)
 
@@ -43,45 +43,48 @@ if __name__ == "__main__":
     sleep_heart_rates = [int(score['resting_heart_rate']) for score in sleep_data]
     sleep_restlessnesses = [float(score['restlessness']) for score in sleep_data]
 
-    sleep_smoothing = 5
+    sleep_smoothing = 3
     smoothed_sleep_timestamps = [datetime.fromtimestamp(x) for x in smooth(sleep_timestamps, sleep_smoothing)]
     smoothed_sleep_scores = smooth(sleep_scores, sleep_smoothing)
     smoothed_sleep_heart_rates = smooth(sleep_heart_rates, sleep_smoothing)
     smoothed_sleep_restlessnesses = smooth(sleep_restlessnesses, sleep_smoothing)
 
     # graph
-    fig, ax1 = plt.subplots()
+    fig, axs = plt.subplots(4, figsize=(20, 10))
 
     # weight
-    ax1.plot(smoothed_weight_times, smoothed_weight_change, 'k', linewidth=0.9, linestyle=':', label='weight change')
-    ax1.fill_between(smoothed_weight_times, smoothed_weight_change, 0, color='k', alpha=0.3)
-    ax1.set_ylabel('weight')
-    ax1.legend(loc='lower left')
+    for ax in axs:
+        ax.plot(smoothed_weight_times[1:], smoothed_weight_change, 'k', linewidth=0.9, linestyle=':', label='weight change')
+        ax.fill_between(smoothed_weight_times[1:], smoothed_weight_change, 0, color='k', alpha=0.3)
+        ax.set_ylabel('weight')
+        ax.legend(loc='lower left')
 
     # sleep
-    ax2 = ax1.twinx()
-    show = smoothed_sleep_restlessnesses
-    if (show == smoothed_sleep_scores):
-        ax2.plot(smoothed_sleep_timestamps, smoothed_sleep_scores, 'b', linewidth=2, label='sleep score')
-        ax2.set_ylabel('score')
-    elif (show == smoothed_sleep_heart_rates):
-        ax2.plot(smoothed_sleep_timestamps, smoothed_sleep_heart_rates, 'b', linewidth=2, label='sleep resting heart rate')
-        ax2.set_ylabel('bpm')
-    elif (show == smoothed_sleep_restlessnesses):
-        ax2.plot(smoothed_sleep_timestamps, smoothed_sleep_restlessnesses, 'b', linewidth=2, label='sleep restlessness')
-        ax2.set_ylabel('restlessness')
+    for i in range(len(axs)):
+        twin_ax = axs[i].twinx()
+        if (i == 0):
+            twin_ax.plot([datetime.fromtimestamp(x) for x in smooth(weight_times, 2)], smooth(weight, 2), 'b', linewidth=2, label='total weight')
+        if (i == 1):
+            twin_ax.plot(smoothed_sleep_timestamps, smoothed_sleep_scores, 'b', linewidth=2, label='sleep score')
+            twin_ax.set_ylabel('score')
+        elif (i == 2):
+            twin_ax.plot(smoothed_sleep_timestamps, smoothed_sleep_heart_rates, 'b', linewidth=2, label='sleep resting heart rate')
+            twin_ax.set_ylabel('bpm')
+        elif (i == 3):
+            twin_ax.plot(smoothed_sleep_timestamps, smoothed_sleep_restlessnesses, 'b', linewidth=2, label='sleep restlessness')
+            twin_ax.set_ylabel('restlessness')
+        twin_ax.legend(loc='upper right')
 
-    ax2.legend(loc='upper right')
-
-    # plt.legend()
     years = matplotlib.dates.YearLocator()
     months = matplotlib.dates.MonthLocator()
     year_fmt = matplotlib.dates.DateFormatter('%Y')
     month_fmt = matplotlib.dates.DateFormatter('%b')
-    ax1.xaxis.set_major_locator(years)
-    ax1.xaxis.set_major_formatter(year_fmt)
-    ax1.xaxis.set_minor_locator(months)
-    ax1.xaxis.set_minor_formatter(month_fmt)
+
+    for ax in axs:
+        ax.xaxis.set_major_locator(years)
+        ax.xaxis.set_major_formatter(year_fmt)
+        ax.xaxis.set_minor_locator(months)
+        ax.xaxis.set_minor_formatter(month_fmt)
 
     plt.xlabel('date')
     plt.show()
