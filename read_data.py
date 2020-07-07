@@ -47,7 +47,9 @@ def get_token():
         redirect_uri = SPOTIFY_REDIRECT_URL
     )
 
-def get_songs(token):
+def get_songs():
+    token = get_token()
+
     streamed_songs = read_spotify_data()
     streamed_ids = [
         search_for_song(song['trackName'], song['artistName'], token)
@@ -65,9 +67,17 @@ def get_songs(token):
     return streamed_features
 
 def read_sleep_scores():
+    def rename_timestamp(datum):
+        datum['datetime'] = datum['timestamp']
+        datum['timestamp'] = datetime.datetime.strptime(
+            datum['timestamp'],
+            "%Y-%m-%dT%H:%M:%SZ"
+        ).timestamp()
+        return datum
+
     file = Path('data/fitbit/sleep-score/sleep_score.csv')
     with file.open() as f:
-        return [dict(x) for x in csv.DictReader(f)]
+        return [rename_timestamp(dict(x)) for x in csv.DictReader(f)]
 
 def read_weight():
     def extract_timestamp(date, time):
@@ -82,7 +92,7 @@ def read_weight():
 
     times = []
     weight = []
-    files = Path('data/fitbit/user-site-export').glob('weight*.json')
+    files = sorted(Path('data/fitbit/user-site-export').glob('weight*.json'))
     return [
         datum
         for file in files
@@ -90,7 +100,7 @@ def read_weight():
     ]
 
 if __name__ == '__main__':
-    pprint(read_weight())
+    # pprint(read_weight())
     # pprint(read_sleep_scores())
-    token = get_token()
-    pprint(get_songs(token))
+    # pprint(get_songs())
+    pass
