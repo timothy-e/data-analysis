@@ -1,3 +1,5 @@
+import csv
+import datetime
 import json
 import os
 from pprint import pprint
@@ -62,6 +64,33 @@ def get_songs(token):
 
     return streamed_features
 
+def read_sleep_scores():
+    file = Path('data/fitbit/sleep-score/sleep_score.csv')
+    with file.open() as f:
+        return [dict(x) for x in csv.DictReader(f)]
+
+def read_weight():
+    def extract_timestamp(date, time):
+        month, day, year = [int(d) for d in date.split("/")]
+        h, m, s = [int(t) for t in time.split(":")]
+        return datetime.datetime(2000 + year, month, day, h, m, s).timestamp()
+
+    def open_weight_file(file):
+        with file.open() as f:
+            data = json.load(f)
+            return [(extract_timestamp(datum['date'], datum['time']), datum['weight']) for datum in data]
+
+    times = []
+    weight = []
+    files = Path('data/fitbit/user-site-export').glob('weight*.json')
+    return [
+        datum
+        for file in files
+        for datum in open_weight_file(file)
+    ]
+
 if __name__ == '__main__':
+    pprint(read_weight())
+    # pprint(read_sleep_scores())
     token = get_token()
     pprint(get_songs(token))
