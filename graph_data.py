@@ -88,3 +88,4 @@ if __name__ == "__main__":
 
     plt.xlabel('date')
     plt.show()
+    plt.savefig('sleep-weight.png')

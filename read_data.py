@@ -79,12 +79,12 @@ def read_sleep_scores():
     with file.open() as f:
         return [rename_timestamp(dict(x)) for x in csv.DictReader(f)]
 
-def read_weight():
-    def extract_timestamp(date, time):
-        month, day, year = [int(d) for d in date.split("/")]
-        h, m, s = [int(t) for t in time.split(":")]
-        return datetime.datetime(2000 + year, month, day, h, m, s).timestamp()
+def extract_timestamp(date, time):
+    month, day, year = [int(d) for d in date.split("/")]
+    h, m, s = [int(t) for t in time.split(":")]
+    return datetime.datetime(2000 + year, month, day, h, m, s).timestamp()
 
+def read_weight():
     def open_weight_file(file):
         with file.open() as f:
             data = json.load(f)
@@ -99,8 +99,35 @@ def read_weight():
         for datum in open_weight_file(file)
     ]
 
+class HeartRateReading:
+    def __init__(self, timestamp, bpm):
+        self.timestamp = timestamp
+        self.bpm = bpm
+
+    def __repr__(self):
+        return f'{self.bpm} bpm at {datetime.datetime.fromtimestamp(self.timestamp)}'
+
+def read_heart_rates():
+    def open_file(path):
+        with path.open() as f:
+            return json.load(f)
+
+    files = sorted(Path('data/fitbit/user-site-export').glob('heart_rate*.json'))
+
+    return [
+        HeartRateReading(
+            extract_timestamp(*reading['dateTime'].split(' ')),
+            reading['value']['bpm']
+        )
+        for file in files
+        for reading in open_file(file)
+    ]
+
+
 if __name__ == '__main__':
     # pprint(read_weight())
     # pprint(read_sleep_scores())
     # pprint(get_songs())
+    print(read_heart_rates()[0])
+    print(read_heart_rates()[-1])
     pass
