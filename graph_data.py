@@ -89,5 +89,5 @@ if __name__ == "__main__":
         ax.xaxis.set_minor_formatter(month_fmt)
 
     plt.xlabel('date')
-    plt.show()
     plt.savefig('sleep-weight.png')
+    plt.show()
